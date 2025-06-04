@@ -5,6 +5,7 @@ const category = document.getElementById("category");
 
 const expenseList = document.querySelector("ul");
 const expensesQuantity = document.querySelector("aside header p span");
+const expenseTotal = document.querySelector("aside header h2");
 
 amount.oninput = () => {
   // regex para impedir a entrada de letras (simples)
@@ -86,6 +87,9 @@ function expenseAdd(newExpense) {
     // adiciona o item na lista
     expenseList.append(expenseItem);
 
+    // limpa o form
+    formClear();
+
     updateTotals();
   } catch (error) {
     alert("Não foi possível atualizar a lista de despesas!");
@@ -103,8 +107,62 @@ function updateTotals() {
     expensesQuantity.textContent = `${items.length} ${
       items.length > 1 ? "despesas" : "despesa"
     }`;
+
+    let total = 0;
+
+    // percorre cada item da lista
+    for (let item = 0; item < items.length; item++) {
+      const itemAmount = items[item].querySelector(".expense-amount");
+
+      let value = itemAmount.textContent
+        // removendo caracteres não numéricos
+        .replace(/[^\d,]/g, "")
+        .replace(",", ".");
+
+      value = parseFloat(value);
+
+      if (isNaN(value)) {
+        return alert(
+          "não é foi possível calcular o total. o valor não parece ser um número"
+        );
+      }
+
+      total += Number(value);
+    }
+
+    const symbolBRL = document.createElement("small");
+    symbolBRL.textContent = "R$";
+
+    total = formatCurrencyBRL(total).toUpperCase().replace("R$", "");
+
+    // limpa o conteúdo do elemento
+    expenseTotal.innerHTML = "";
+
+    expenseTotal.append(symbolBRL, total);
   } catch (error) {
     console.log(error);
     alert("não foi possível atualizar os valores totais");
   }
+}
+
+// evento que captura os clicks na lista
+expenseList.addEventListener("click", (event) => {
+  if (event.target.classList.contains("remove-icon")) {
+    // obtem a li pai do elemento clicado
+    const item = event.target.closest(".expense");
+
+    item.remove();
+  }
+
+  // atualiza os totais
+  updateTotals();
+});
+
+// limpa campos depois da conversão do form
+function formClear() {
+  expense.value = "";
+  category.value = "";
+  amount.value = "";
+
+  expense.focus();
 }
